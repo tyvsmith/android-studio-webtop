@@ -1,0 +1,87 @@
+// Global Gradle initialization script for Android development
+
+allprojects {
+    repositories {
+        // Use Google's Maven repository for Android dependencies
+        google()
+        
+        // Maven Central for general dependencies
+        mavenCentral()
+        
+        // JitPack for GitHub projects
+        maven { url 'https://jitpack.io' }
+        
+        // Gradle Plugin Portal
+        gradlePluginPortal()
+        
+        // Local Maven repository
+        mavenLocal()
+    }
+    
+    // Configure build cache
+    buildCache {
+        local {
+            enabled = true
+            directory = new File(gradle.gradleUserHome, 'caches/build-cache-1')
+            removeUnusedEntriesAfterDays = 30
+        }
+    }
+}
+
+// Configure Gradle properties
+gradle.beforeProject { project ->
+    project.ext {
+        // Android build properties
+        compileSdkVersion = 34
+        minSdkVersion = 21
+        targetSdkVersion = 34
+        
+        // Version codes
+        versionCode = 1
+        versionName = "1.0"
+        
+        // Dependencies versions
+        kotlinVersion = '1.9.20'
+        composeVersion = '1.5.4'
+        lifecycleVersion = '2.6.2'
+        navigationVersion = '2.7.5'
+        roomVersion = '2.6.0'
+        hiltVersion = '2.48'
+        retrofitVersion = '2.9.0'
+        coroutinesVersion = '1.7.3'
+    }
+}
+
+// Apply common configurations
+gradle.projectsLoaded {
+    rootProject.allprojects {
+        // Configure Java compatibility
+        tasks.withType(JavaCompile) {
+            options.encoding = 'UTF-8'
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+        
+        // Configure Kotlin
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+                freeCompilerArgs += [
+                    "-opt-in=kotlin.RequiresOptIn",
+                    "-opt-in=kotlin.ExperimentalStdlibApi",
+                    "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+                ]
+            }
+        }
+    }
+}
+
+// Performance optimizations
+gradle.startParameter.maxWorkerCount = Runtime.runtime.availableProcessors()
+gradle.startParameter.parallelProjectExecutionEnabled = true
+
+// Logging configuration
+gradle.rootProject {
+    logging.captureStandardOutput LogLevel.INFO
+    logging.captureStandardError LogLevel.ERROR
+}

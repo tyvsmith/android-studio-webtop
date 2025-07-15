@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  android-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - ANDROID_STUDIO_VERSION=2024.1.1.11
+        - ANDROID_SDK_VERSION=34
+        - BUILD_TOOLS_VERSION=34.0.0
+        - GRADLE_VERSION=8.4
+    container_name: android-studio-dev
+    hostname: android-dev
+    
+    environment:
+      - DISPLAY=:1
+      - VNC_RESOLUTION=1920x1080
+      - VNC_PW=android
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+      - GRADLE_USER_HOME=/home/developer/.gradle
+      - PATH=/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/opt/android-studio/bin:$PATH
+      - ENABLE_HARDWARE_ACCELERATION=true
+      - KVM_DEVICE=/dev/kvm
+      - ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
+      - ANDROID_AVD_HOME=/home/developer/.android/avd
+      
+    volumes:
+      - ../:/workspace:cached
+      - android-sdk:/opt/android-sdk
+      - gradle-cache:/home/developer/.gradle/caches
+      - maven-cache:/home/developer/.m2
+      - android-home:/home/developer/.android
+      - android-studio-config:/home/developer/.config/Google/AndroidStudio
+      - android-studio-cache:/home/developer/.cache/Google/AndroidStudio
+      - /dev/kvm:/dev/kvm
+      - /dev/dri:/dev/dri
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      
+    ports:
+      - "3000:3000"    # KasmVNC Web Interface
+      - "3001:3001"    # Alternative Web Interface
+      - "5037:5037"    # ADB Server
+      - "5554:5554"    # Emulator Console
+      - "5555:5555"    # Emulator ADB
+      - "5900:5900"    # VNC Server
+      - "6080:6080"    # noVNC
+      - "8080:8080"    # Development Server
+      - "8081:8081"    # Metro Bundler (React Native)
+      - "9000:9000"    # Debug Port
+      
+    devices:
+      - /dev/kvm
+      - /dev/dri
+      
+    group_add:
+      - video
+      - render
+      
+    cap_add:
+      - SYS_PTRACE
+      - NET_ADMIN
+      
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+      
+    shm_size: '2gb'
+    
+    networks:
+      - android-dev-network
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Dedicated ADB server for better performance
+  adb-server:
+    image: sorccu/adb:latest
+    container_name: adb-server
+    restart: unless-stopped
+    ports:
+      - "5038:5037"
+    environment:
+      - ADB_PORT=5037
+    networks:
+      - android-dev-network
+    volumes:
+      - adb-keys:/root/.android
+      
+  # Optional: Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: android-dev-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - android-dev-network
+    command: redis-server --appendonly yes
+
+volumes:
+  android-sdk:
+    name: android-sdk-cache
+  gradle-cache:
+    name: gradle-cache
+  maven-cache:
+    name: maven-cache
+  android-home:
+    name: android-home
+  android-studio-config:
+    name: android-studio-config
+  android-studio-cache:
+    name: android-studio-cache
+  adb-keys:
+    name: adb-keys
+  redis-data:
+    name: redis-data
+
+networks:
+  android-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

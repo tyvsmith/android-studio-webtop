@@ -1,0 +1,173 @@
+{
+  "name": "Android Studio Development Environment",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "android-studio",
+  "workspaceFolder": "/workspace",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "developer",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": true,
+      "moby": true
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "fwcd.kotlin",
+        "mathiasfrohlich.kotlin",
+        "vscjava.vscode-gradle",
+        "naco-siren.gradle-language",
+        "richardwillis.vscode-gradle-extension-pack",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "VisualStudioExptTeam.intellicode-api-usage-examples",
+        "redhat.java",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-java-test",
+        "vscjava.vscode-maven",
+        "SonarSource.sonarlint-vscode",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "donjayamanne.githistory",
+        "GitHub.vscode-pull-request-github",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-vscode.makefile-tools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "vadimcn.vscode-lldb",
+        "mutantdino.resourcemonitor",
+        "humao.rest-client",
+        "rangav.vscode-thunder-client",
+        "mikestead.dotenv",
+        "EditorConfig.EditorConfig"
+      ],
+      "settings": {
+        "java.home": "/usr/lib/jvm/java-17-openjdk",
+        "java.configuration.runtimes": [
+          {
+            "name": "JavaSE-11",
+            "path": "/usr/lib/jvm/java-11-openjdk"
+          },
+          {
+            "name": "JavaSE-17",
+            "path": "/usr/lib/jvm/java-17-openjdk",
+            "default": true
+          }
+        ],
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        },
+        "files.watcherExclude": {
+          "**/.git/objects/**": true,
+          "**/.git/subtree-cache/**": true,
+          "**/node_modules/**": true,
+          "**/.gradle/**": true,
+          "**/build/**": true
+        },
+        "remote.autoForwardPorts": true,
+        "remote.autoForwardPortsSource": "process"
+      }
+    }
+  },
+
+  "forwardPorts": [
+    3000,
+    3001,
+    5037,
+    5554,
+    5555,
+    5900,
+    6080,
+    8080,
+    8081,
+    9000
+  ],
+  
+  "portsAttributes": {
+    "3000": {
+      "label": "Android Studio Web UI",
+      "onAutoForward": "notify"
+    },
+    "5037": {
+      "label": "ADB Server",
+      "onAutoForward": "silent"
+    },
+    "5554": {
+      "label": "Android Emulator Console",
+      "onAutoForward": "silent"
+    },
+    "5555": {
+      "label": "Android Emulator ADB",
+      "onAutoForward": "silent"
+    },
+    "5900": {
+      "label": "VNC Server",
+      "onAutoForward": "silent"
+    },
+    "6080": {
+      "label": "noVNC Web Interface",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "/workspace/scripts/post-create.sh",
+  "postStartCommand": "/workspace/scripts/post-start.sh",
+  "postAttachCommand": "/workspace/scripts/post-attach.sh",
+
+  "remoteUser": "developer",
+  "containerUser": "developer",
+  
+  "mounts": [
+    "source=${localWorkspaceFolder}/.android,target=/home/developer/.android,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.gradle,target=/home/developer/.gradle,type=bind,consistency=cached",
+    "source=android-sdk-cache,target=/opt/android-sdk,type=volume",
+    "source=gradle-cache,target=/home/developer/.gradle/caches,type=volume",
+    "source=maven-cache,target=/home/developer/.m2,type=volume"
+  ],
+
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt", "seccomp=unconfined",
+    "--device", "/dev/kvm",
+    "--device", "/dev/dri",
+    "--group-add", "video",
+    "--group-add", "render"
+  ],
+
+  "containerEnv": {
+    "ANDROID_HOME": "/opt/android-sdk",
+    "ANDROID_SDK_ROOT": "/opt/android-sdk",
+    "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk",
+    "GRADLE_USER_HOME": "/home/developer/.gradle",
+    "DISPLAY": ":1",
+    "VNC_RESOLUTION": "1920x1080",
+    "VNC_PW": "android",
+    "ENABLE_HARDWARE_ACCELERATION": "true"
+  }
+}
